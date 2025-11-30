@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>YEMREZ // Black Lock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #000;
+      color: #f00;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow: hidden;
+    }
+
+    .screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    /* Kısa giriş (isteğe bağlı, 2 sn) */
+    #introScreen {
+      background: radial-gradient(circle at center, #200000 0%, #000 70%);
+      color: #f00;
+    }
+
+    .title {
+      font-size: 1.4rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+
+    /* FULL SİYAH LOCK EKRANI */
+    #blackScreen {
+      background: #000;
+      color: #000; /* Yazı yok gibi – tam karanlık */
+    }
+
+    /* YEMREZ final ekranı */
+    #finalScreen {
+      background: radial-gradient(circle at center, #150000 0%, #000 70%);
+      color: #f00;
+    }
+
+    .final-title {
+      font-size: 2rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .tagline {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .final-text {
+      font-size: 0.9rem;
+      opacity: 0.85;
+    }
+
+    .btn {
+      margin-top: 22px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: 1px solid #f00;
+      background: transparent;
+      color: #f00;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .small {
+      font-size: 0.75rem;
+      opacity: 0.5;
+      margin-top: 10px;
+    }
+
+    /* Scanline efekti (final ekranda hafif eski monitör vibe) */
+    .scanlines::before {
+      content: "";
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(255, 0, 0, 0.08),
+        rgba(255, 0, 0, 0.08) 1px,
+        transparent 2px,
+        transparent 3px
+      );
+      mix-blend-mode: screen;
+      opacity: 0.33;
+    }
+
+    /* Kilit katmanı – dokunuşları emen görünmez layer */
+    #lockLayer {
+      position: fixed;
+      inset: 0;
+      background: transparent;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+  <!-- Dokunuşları kilitleyen görünmez layer -->
+  <div id="lockLayer" class="hidden"></div>
+
+  <!-- 1) (Opsiyonel) kısa intro – istersen direkt blackScreen'den de başlayabilirsin -->
+  <div id="introScreen" class="screen">
+    <div class="title">NFC SİNYALİ ALGILANDI</div>
+    <div class="subtitle">Cihazınız geçici karartma moduna alınıyor...</div>
+  </div>
+
+  <!-- 2) 15–20 sn tam siyah ekran -->
+  <div id="blackScreen" class="screen hidden">
+    <!-- Bilerek boş bırakıldı: tam siyah, yazı yok -->
+  </div>
+
+  <!-- 3) YEMREZ final ekranı -->
+  <div id="finalScreen" class="screen hidden scanlines">
+    <div class="final-title">YEMREZ</div>
+    <div class="tagline">BLACK SIGNAL</div>
+    <div class="final-text">
+      Ekranını ışıksız bıraktım. <br />
+      Cihazına değil, algına dokundum.
+    </div>
+    <button class="btn" onclick="window.location.reload()">TEKRAR KİLİTLE</button>
+    <div class="small">
+      Bu efekt tamamen görsel bir simülasyondur. <br />
+      Gerçek sistem kilidi içermez.
+    </div>
+  </div>
+
+  <script>
+    // SÜRELERİ BURADAN AYARLIYORSUN
+    const INTRO_DURATION = 2000;        // 2 sn intro (istersen 0 yapabilirsin)
+    const BLACK_DURATION = 18000;       // 18 sn full siyah (15–20 sn arası olsun diye)
+    let lockActive = false;
+
+    const introScreen = document.getElementById("introScreen");
+    const blackScreen = document.getElementById("blackScreen");
+    const finalScreen = document.getElementById("finalScreen");
+    const lockLayer = document.getElementById("lockLayer");
+
+    function showBlackScreen() {
+      introScreen.classList.add("hidden");
+      blackScreen.classList.remove("hidden");
+      lockLayer.classList.remove("hidden");
+      lockActive = true;
+
+      // Belirtilen süre boyunca "kilitli"
+      setTimeout(() => {
+        lockActive = false;
+        lockLayer.classList.add("hidden");
+        blackScreen.classList.add("hidden");
+        finalScreen.classList.remove("hidden");
+      }, BLACK_DURATION);
+    }
+
+    function startSequence() {
+      // Önce intro, sonra siyah ekran
+      if (INTRO_DURATION > 0) {
+        setTimeout(showBlackScreen, INTRO_DURATION);
+      } else {
+        showBlackScreen();
+      }
+    }
+
+    // Dokunmaları emen handler
+    function absorbEvent(e) {
+      if (!lockActive) return;
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+
+    // Çeşitli input event'lerini dinle
+    ["touchstart", "touchmove", "touchend", "click", "pointerdown", "pointerup"].forEach(evt => {
+      window.addEventListener(evt, absorbEvent, { passive: false });
+    });
+
+    window.addEventListener("load", startSequence);
+  </script>
+</body>
+</html>
